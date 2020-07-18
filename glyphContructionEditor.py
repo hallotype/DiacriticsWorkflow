@@ -30,7 +30,8 @@ def constructions2columnlist(constructions):
 
 
 columnDescriptions = [
-    dict(title="compo", width=100, editable=True),
+    dict(title="", key="active", cell=CheckBoxListCell(), width=17),
+    dict(title="compo", width=130, editable=True),
     dict(title="base", width=50,  editable=True),
     dict(title="construction", editable=False),
 ]
@@ -42,7 +43,7 @@ class GlyphConstructionEditor():
         self.w.l = List(
             (10, 10, 400, -10),
 
-            constructions2columnlist(f.lib['nl.hallotype.glyphConstructions']),
+            f.lib['nl.hallotype.glyphConstructions'],
             columnDescriptions=columnDescriptions,
             selectionCallback=self.loadForEdit,
         )
@@ -78,7 +79,28 @@ class GlyphConstructionEditor():
     def reloadConstruction(self, sender):
         path = "/Users/thom/Library/Application Support/RoboFont/scripts/*accent/_glyphContructionsRF3.py"
         bc = imp.load_source('txt', path)
-        f.lib['nl.hallotype.glyphConstructions'] = bc.basics
+        asList = ParseGlyphConstructionListFromString(bc.basics)
+        asDict = []
+        for i in asList:
+            if i.find("+") != i.rfind("+"):
+                continue
+            compo = i.split("=")[0][:-1]
+            base = i.split("=")[1][1:].split("+")[0].strip()
+            accent = i.split("=")[1][1:].split("+")[1].strip().split("@")[0]
+            anchor = i.split("=")[1][1:].split("+")[1].strip().split("@")[1]
+            # for now only one accent@anchor pair!
+            construction = i.split("+")[1].strip()
+            asDict.append(dict(
+                active=True,
+                compo=compo,
+                base=base,
+                accent=accent,
+                anchor=anchor,
+                construction=construction,
+
+            ))
+
+        f.lib['nl.hallotype.glyphConstructions'] = asDict
         self.w.l.set(constructions2columnlist(
             f.lib['nl.hallotype.glyphConstructions']),)
 
@@ -95,7 +117,8 @@ class GlyphConstructionEditor():
         self.updateFontConstruction()
 
     def newConstruction(self, sender):
-        n = {"compo": 'x', 'base': 'x', 'construction': 'x@x'}
+        n = {"active": True, "compo": 'x', 'base': 'x',
+             'accent': 'x', "anchor": 'a', 'construction': 'x@a'}
         l = self.w.l.get()
         l.insert(0, n)
         self.w.l.set(l)
@@ -123,6 +146,8 @@ class GlyphConstructionEditor():
         index = l.index(e)
         l[index]['compo'] = self.w.editCompo.get()
         l[index]['base'] = self.w.editBase.get()
+        l[index]['accent'] = self.w.editAccent.get()
+        l[index]['anchor'] = self.w.editAnchor.get()
         l[index]['construction'] = "@".join(
             [self.w.editAccent.get(), self.w.editAnchor.get()])
         self.w.l.set(l)
@@ -130,16 +155,16 @@ class GlyphConstructionEditor():
         self.updateFontConstruction()
 
     def updateFontConstruction(self):
-        __doc__ = """take the list and turn it into string and store"""
+        __doc__ = """..."""
         l = self.w.l.get()
-        s = """"""
-        # Ytilde = Y+tilde@top
+        # s = """"""
+        # # Ytilde = Y+tilde@top
 
-        for i in l:
-            c = "%s = %s+%s\n" % (i['compo'], i['base'], i['construction'])
-            s += c
+        # for i in l:``
+        #     c = "%s = %s+%s\n" % (i['compo'], i['base'], i['construction'])
+        #     s += c
 
-        f.lib['nl.hallotype.glyphConstructions'] = s
+        f.lib['nl.hallotype.glyphConstructions'] = l
 
 
 GlyphConstructionEditor()
