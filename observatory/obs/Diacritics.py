@@ -6,7 +6,8 @@
     - accent: base, anchors
 
 
-
+TODO:
+    updte for the new list sructure
 
 
 """
@@ -34,72 +35,72 @@ def loadConstuctions():
     if 'nl.hallotype.glyphConstructions' in CurrentFont().lib:
         construction = CurrentFont().lib['nl.hallotype.glyphConstructions']
     else:
-
-        construction = imp.load_source(
-            'construction',
-            '/Users/thom/Library/Application Support/RoboFont/scripts/*accent/_glyphContructionsRF3.py'
-        )
-        construction = construction.basics
+        reloadConstructions()
+        construction = CurrentFont().lib['nl.hallotype.glyphConstructions']
     return construction
 
 
-def makeSuperDict():
-    superdict = sd = {}
-    cs = CurrentFont().lib['nl.hallotype.glyphConstructions']
-    from glyphConstruction import ParseGlyphConstructionListFromString
-    for construction in ParseGlyphConstructionListFromString(cs):
-        compo = construction.split("=")[0][:-1]
-        base = construction.split("=")[1][1:].split("+")[0].strip()
-        accent = construction.split("=")[1][1:].split(
-            "+")[1].strip().split("@")[0]
-        anchor = construction.split("=")[1][1:].split(
-            "+")[1].strip().split("@")[1]
+def isAccent(glyphName):
+    if CurrentFont()[glyphName].anchors:
+        return CurrentFont()[glyphName].anchors[0].name[0] == "_"
 
-        if base not in sd:
-            sd[base] = {}
-        if accent not in sd:
-            sd[accent] = {}
-        if anchor not in sd:
-            sd[anchor] = {}
-        if compo not in sd:
-            sd[compo] = {}
+# def makeSuperDict():
+#     superdict = sd = {}
+#     cs = CurrentFont().lib['nl.hallotype.glyphConstructions']
+#     from glyphConstruction import ParseGlyphConstructionListFromString
+#     for construction in ParseGlyphConstructionListFromString(cs):
+#         compo = construction.split("=")[0][:-1]
+#         base = construction.split("=")[1][1:].split("+")[0].strip()
+#         accent = construction.split("=")[1][1:].split(
+#             "+")[1].strip().split("@")[0]
+#         anchor = construction.split("=")[1][1:].split(
+#             "+")[1].strip().split("@")[1]
 
-        if base not in sd[accent]:
-            sd[accent][base] = {}
-        if base not in sd[anchor]:
-            sd[anchor][base] = {}
-        if base not in sd[compo]:
-            sd[compo][base] = {}
+#         if base not in sd:
+#             sd[base] = {}
+#         if accent not in sd:
+#             sd[accent] = {}
+#         if anchor not in sd:
+#             sd[anchor] = {}
+#         if compo not in sd:
+#             sd[compo] = {}
 
-        if accent not in sd[base]:
-            sd[base][accent] = {}
-        if accent not in sd[anchor]:
-            sd[anchor][accent] = {}
-        if accent not in sd[compo]:
-            sd[compo][accent] = {}
+#         if base not in sd[accent]:
+#             sd[accent][base] = {}
+#         if base not in sd[anchor]:
+#             sd[anchor][base] = {}
+#         if base not in sd[compo]:
+#             sd[compo][base] = {}
 
-        if anchor not in sd[base]:
-            sd[base][anchor] = {}
-        if anchor not in sd[accent]:
-            sd[accent][anchor] = {}
-        if anchor not in sd[compo]:
-            sd[compo][anchor] = {}
+#         if accent not in sd[base]:
+#             sd[base][accent] = {}
+#         if accent not in sd[anchor]:
+#             sd[anchor][accent] = {}
+#         if accent not in sd[compo]:
+#             sd[compo][accent] = {}
 
-        if compo not in sd[base]:
-            sd[base][compo] = {}
-        if compo not in sd[accent]:
-            sd[accent][compo] = {}
-        if compo not in sd[anchor]:
-            sd[anchor][compo] = {}
+#         if anchor not in sd[base]:
+#             sd[base][anchor] = {}
+#         if anchor not in sd[accent]:
+#             sd[accent][anchor] = {}
+#         if anchor not in sd[compo]:
+#             sd[compo][anchor] = {}
 
-        if anchor not in sd[base][accent]:
-            sd[base][accent][anchor] = compo
-        if accent not in sd[base][anchor]:
-            sd[base][anchor][accent] = compo
-    return sd
+#         if compo not in sd[base]:
+#             sd[base][compo] = {}
+#         if compo not in sd[accent]:
+#             sd[accent][compo] = {}
+#         if compo not in sd[anchor]:
+#             sd[anchor][compo] = {}
+
+#         if anchor not in sd[base][accent]:
+#             sd[base][accent][anchor] = compo
+#         if accent not in sd[base][anchor]:
+#             sd[base][anchor][accent] = compo
+#     return sd
 
 
-sd = makeSuperDict()
+#sd = makeSuperDict()
 
 alles = ""
 title = "Diacritics"  # Keep them unique!
@@ -143,17 +144,11 @@ anchorsNames = {
 def makeLookupDicts(myset):
     b = {}
     a = {}
-    constructions = ParseGlyphConstructionListFromString(myset)
-    # print(constructions)
-    for construction in constructions:
-        if construction.find("+") != construction.rfind("+"):
-            continue  # kill doubles for now
-        compo = construction.split("=")[0][:-1]
-        base = construction.split("=")[1][1:].split("+")[0].strip()
-        accent = construction.split("=")[1][1:].split(
-            "+")[1].strip().split("@")[0]
-        anchor = construction.split("=")[1][1:].split(
-            "+")[1].strip().split("@")[1]
+    for construction in myset:
+        compo = construction['compo']
+        base = construction['base']
+        accent = construction['accent']
+        anchor = construction['anchor']
         constr = {'accent': accent, 'anchor': anchor}
         b_constr = {'base': base, 'anchor': anchor}
 
@@ -199,63 +194,6 @@ def makeLookupDicts(myset):
     return b, a
 
 
-# def decomposeRemoveOverlapFactory(glyph, font=None):
-#     # evb, coverage
-#     # generate a version of this glyph that has
-#     #     no components
-#     #     no overlap
-#     # in other words, a very very very basic shape of this glyph
-#     if font is None:
-#         font = glyph.getParent()
-#     new = RGlyph()
-#     p = new.getPointPen()
-#     tp = DecomposePointPen(font, p)
-#     glyph.drawPoints(tp)
-#     new.removeOverlap()
-#     new.correctDirection()
-#     new.width = glyph.width
-#     new.name = glyph.name
-#     new.unicode = glyph.unicode
-#     return new
-
-
-# def getArea(glyph):
-#     pen = glyph.getPen()
-#     a = AreaPen(pen)
-#     glyph.draw(a)
-#     return a.value
-
-
-# def getNeededAnchors(myset):
-#     neededAnchors = {}
-#     data = myset.split("\n")
-#     for i in data:
-#         if len(i) == 0:
-#             continue
-#         if i[0] != '#':
-#             neededAnchors[i.split()[1]] = []
-#     for i in data:
-#         if len(i) == 0:
-#             continue
-#         if i[0] != '#':
-#             baseGlyph = i.split()[1]
-#             for j in i.split():
-#                 if "." in j:
-#                     neededAnchors[baseGlyph].append(j.split(".")[-1])
-#                     neededAnchors[baseGlyph] = list(
-#                         set(neededAnchors[baseGlyph]))
-
-#     return neededAnchors
-
-
-# Latin_Supp_block = readGlyphConstructions(Latin_Supp)
-# #print Latin_Supp_block
-# Latin_Ext_A_block = readGlyphConstructions(Latin_Ext_A)
-# Latin_Ext_B_block = readGlyphConstructions(Latin_Ext_B)
-# Latin_Ext_additional_block = readGlyphConstructions(Latin_Ext_additional)
-
-#
-
 def anchorInGlyph(anchor, glyph):
     for a in glyph.anchors:
         if a.name == anchor:
@@ -263,9 +201,9 @@ def anchorInGlyph(anchor, glyph):
         if a.name == "_"+anchor:
             return (True, a.y)
     return (False, None)
+
+
 # dont change name of class
-
-
 class ThisObserver(BaseWindowController):
 
     def __init__(self, active=bool):
@@ -377,7 +315,7 @@ class ThisObserver(BaseWindowController):
     def reloadConstructions(self, sender=None):
         self.construction = loadConstuctions()
         self.baseDict, self.accentDict = makeLookupDicts(self.construction)
-        self.sd = makeSuperDict()
+        # self.sd = makeSuperDict()
         self.buildAccentList()
 
     def goToAccent(self, sender):
@@ -438,7 +376,7 @@ class ThisObserver(BaseWindowController):
             if i['checkBox']:
                 accent = i['construction']['accent']
                 anchor = i['construction']['anchor']
-                compo = self.sd[base][accent][anchor]
+                compo = "testcompo"  # self.sd[base][accent][anchor]
                 if base not in font.keys():
                     continue
                 if accent not in font.keys():
@@ -528,6 +466,7 @@ class ThisObserver(BaseWindowController):
             ##
 
             key = defaultKey+"."+item["accent"]+"@"+anchor
+            # print(key)
             value = item["checkBox"]
 
             setExtensionDefault(key, value)
@@ -578,12 +517,13 @@ class ThisObserver(BaseWindowController):
                     # print(c)
                     if c['base'] == base:
                         position = c['anchor']
-
+# key = defaultKey+"."+item["accent"]+"@"+anchor
                 theAccentsList.append(
                     dict(
                         anchor=pijlen[position],
                         accent=base,
-                        checkBox=False,
+                        checkBox=getExtensionDefault(
+                            defaultKey+"."+base+"@"+position, True),
                         construction=self.accentDict[glyphName],
                     ),
                 )
