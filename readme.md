@@ -26,9 +26,6 @@ The glyphConstruction are stored in the font.lib. The font is in charge of what 
 
 Edit the database.
 
-TODO:
-  - make it a checkbox list
-
 ---
 
 ### positioning observer
