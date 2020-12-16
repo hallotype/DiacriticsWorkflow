@@ -4,7 +4,8 @@ A toolkit for working on diacritics/accents in RoboFont
 Thom Janssen 072020
 
 
-`glyphConstructions` are the basis for these tools. There is only one source so is no double data and/or out of sync things.
+### GlyphConstructions
+`GlyphConstructions` are the basis for these tools. There is only one source so is no double data and/or out of sync things. Only the capital Constructions are in the this list. The workflow translate it to lowercase as well as all suffixes. Except when the Construction is different than the capital Construction it is added to the Constructions.
 
 ```
 Agrave = A+grave@top
@@ -16,11 +17,14 @@ Aring = A+ring@ring
 Ccedilla = C+cedilla@bottom
 Egrave = E+grave@top
 …
+Dcaron = D+caron@top
+dcaron = d+caronslovak@right   # <- construction is different for lowercase
+…
 ```
 
-The glyphConstruction are stored in the font.lib. The font is in charge of what diacritics are important for the project.
+The GlyphConstruction are stored in the font.lib. The font is in charge of what diacritics are important for the project.
 
-### glyphConstructionEditor
+### Editor
 
 ![screenshot](images/screenGlyphConstrEditor.png)
 
@@ -35,6 +39,7 @@ In a dialog all the accent-anchor combinations are visible for this base glyph. 
 ![screenshot](images/screenAccent2baseGlyph.png)
 If an anchor is missing, there is a warning:
 ![screenshot](images/screen_missingAnchor.png)
+Also if an anchor is missing there will be a button in the Window 'add missing anchors'. This will place the anchors roughly in the right spot. 
 
 ---
 

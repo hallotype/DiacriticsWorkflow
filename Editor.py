@@ -1,16 +1,16 @@
-from utilities import storeConstructionsInFontLib
-import imp
+# from utilities import storeConstructionsInFontLib
+import imp,os
 from glyphConstruction import ParseGlyphConstructionListFromString, GlyphConstructionBuilder
 from vanilla import *
 
-import utilities
+# import utilities
 
 f = CurrentFont()
 
 
 def constructions2columnlist(constructions):
     l = []
-    for i in ParseGlyphConstructionListFromString(f.lib['nl.hallotype.glyphConstructions']):
+    for i in ParseGlyphConstructionListFromString(constructions):
         if i.find("+") != i.rfind("+"):
             continue
         comp = i.split("=")[0][:-1]
@@ -39,11 +39,11 @@ columnDescriptions = [
 
 class GlyphConstructionEditor():
     def __init__(self):
-        self.w = Window((600, 400), minSize=(400, 100),)
+        self.w = Window((600, 400), minSize=(400, 100),title="GlyphConstuctions Editor")
         self.w.l = List(
             (10, 10, 400, -10),
 
-            f.lib['nl.hallotype.glyphConstructions'],
+            [],
             columnDescriptions=columnDescriptions,
             selectionCallback=self.loadForEdit,
         )
@@ -69,19 +69,37 @@ class GlyphConstructionEditor():
         y += 15
         self.w.newConstruction = Button(
             (430, y, -10, 22), "new", callback=self.newConstruction)
+        self.w.dupConstruction = Button(
+            (430, y+30, -10, 22), "dulpicate", callback=self.dupConstruction)
         self.w.delConstruction = Button(
-            (430, y+30, -10, 22), "delete", callback=self.delConstruction)
+            (430, y+60, -10, 22), "delete", callback=self.delConstruction)
         self.w.reloadDefaultSet = Button(
-            (430, y+60, -10, 22), "reload defaults", callback=self.reloadConstruction)
+            (430, y+90, -10, 22), "reload defaults", callback=self.reloadConstruction)
 
         self.w.open()
+        self.load()
+
+    def load(self):
+        if f:
+            if 'nl.hallotype.glyphConstructions' in f.lib.keys():
+                self.w.l.set(f.lib['nl.hallotype.glyphConstructions'])
+            else:
+                self.reloadConstruction(None)
+        else:
+            self.reloadConstruction(None)
+
 
     def reloadConstruction(self, sender):
-        path = "/Users/thom/Library/Application Support/RoboFont/scripts/*accent/_glyphContructionsRF3.py"
+        """
+        throw away custom contrustions and load default
+        """
+        # print(os.getcwd())
+        path = "/Users/thom/Library/Application Support/RoboFont/scripts/*DiacriticsWorkflow/_glyphContructions_basic+.py"
         bc = imp.load_source('txt', path)
         asList = ParseGlyphConstructionListFromString(bc.basics)
         asDict = []
         for i in asList:
+            if not i: continue
             if i.find("+") != i.rfind("+"):
                 continue
             compo = i.split("=")[0][:-1]
@@ -100,9 +118,17 @@ class GlyphConstructionEditor():
 
             ))
 
-        f.lib['nl.hallotype.glyphConstructions'] = asDict
-        self.w.l.set(constructions2columnlist(
-            f.lib['nl.hallotype.glyphConstructions']),)
+        if f:
+            f.lib['nl.hallotype.glyphConstructions'] = asDict
+            self.w.l.set(f.lib['nl.hallotype.glyphConstructions'])
+        else:
+            self.w.l.set(asDict)
+        # clear Edits
+        self.w.editCompo.set("")
+        self.w.editBase.set("")
+        self.w.editAccent.set("")
+        self.w.editAnchor.set("")
+
 
     def delConstruction(self, sender):
         sel = self.w.l.getSelection()
@@ -119,12 +145,23 @@ class GlyphConstructionEditor():
     def newConstruction(self, sender):
         n = {"active": True, "compo": 'x', 'base': 'x',
              'accent': 'x', "anchor": 'a', 'construction': 'x@a'}
-        l = self.w.l.get()
+        l = self.w.l
         l.insert(0, n)
         self.w.l.set(l)
-        self.w.l.setSelection([0])
+        index = self.w.l.get().index(n)
+        self.w.l.setSelection([index])
         self.w.l.scrollToSelection()
 
+    def dupConstruction(self, sender):
+        n = {"active": True, "compo": self.w.editCompo.get(), 'base': self.w.editBase.get(),
+             'accent': self.w.editAccent.get(), "anchor": self.w.editAnchor.get(), 'construction': self.w.editAccent.get()+'@'+self.w.editAnchor.get()}
+        l = self.w.l
+        l.insert(0, n)
+        self.w.l.set(l)
+        index = self.w.l.get().index(n)
+        self.w.l.setSelection([index])
+        self.w.l.scrollToSelection()
+        
     def loadForEdit(self, sender):
         if not sender.getSelection():
             return
